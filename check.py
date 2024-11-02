@@ -9,7 +9,8 @@ def check(A, B):
 
 
 # Define the data
-sizes = ["512", "1024", "2048", "4096", "8192"]
+#sizes = ["512", "1024", "2048", "4096", "8192"]
+sizes = ["512", "1024"]
 types = ["mp", "cf", "numba", "mpi"]
 
 # Load the secuential results
