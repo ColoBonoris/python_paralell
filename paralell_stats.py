@@ -1,57 +1,82 @@
-import os
 import csv
 
-def read_times_from_csv(filepath):
-    with open(filepath, 'r') as file:
+# Define la dimensión de cada punto (cambia esto si sabes el valor exacto)
+d = 3
+
+# Función para cargar los datos de un archivo CSV
+def load_csv(file_path, has_units=True):
+    data = []
+    with open(file_path, mode='r') as file:
         reader = csv.reader(file)
-        next(reader)  # Saltamos el encabezado
-        times = [list(map(float, row[1:])) for row in reader]
-    return times
+        header = next(reader)
+        for row in reader:
+            if has_units:
+                data.append([int(row[0])] + [float(x) for x in row[1:]])
+            else:
+                data.append([float(x) for x in row])
+    return header, data
 
-def calculate_speedup_and_efficiency(sequential_times, parallel_times, num_cores):
-    speedup = [[seq / par if par != 0 else 0 for seq, par in zip(sequential_times, p_times)] for p_times in parallel_times]
-    efficiency = [[s / core if core != 0 else 0 for s in s_times] for s_times, core in zip(speedup, num_cores)]
-    return speedup, efficiency
+# Función para calcular el speedup, eficiencia, overhead y FLOPs/s
+def calculate_metrics(sequential_times, parallel_times, comms=None):
+    results = []
+    n_sizes = len(sequential_times[0])  # Cantidad de tamaños de matrices
 
-def calculate_overhead(communication_times, parallel_times):
-    overhead = [[comm / par if par != 0 else 0 for comm, par in zip(c_times, p_times)] for c_times, p_times in zip(communication_times, parallel_times)]
-    return overhead
+    for row in parallel_times:
+        units = row[0]
+        times = row[1:]
 
-def write_results_to_csv(filename, headers, rows):
-    with open(filename, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(headers)
-        writer.writerows(rows)
+        # Calcular speedup
+        speedup = [sequential_times[0][i] / times[i] for i in range(n_sizes)]
 
-# Rutas de los archivos
-sequential_file = './results/sequential.csv'
-parallel_files = {
-    'cf': './results/concurrent_features.csv',
-    'mpi': './results/mpi.csv',
-    'numba': './results/numba.csv'
-}
+        # Calcular eficiencia
+        efficiency = [speedup[i] / units for i in range(n_sizes)]
 
-# Leer tiempos secuenciales
-sequential_times = read_times_from_csv(sequential_file)[0]  # Solo una fila
+        # Calcular overhead (incluyendo el multiplicador de 100)
+        if comms:
+            overhead = [(comms[row[0]][i] / times[i]) * 100 for i in range(n_sizes)]
+        else:
+            overhead = ["N/A"] * n_sizes  # Para numba y mp sin tiempo de comunicación
 
-# Leer tiempos de ejecución paralela y de comunicación
-parallel_data = {}
-num_cores = [12, 10, 8, 4, 2]
+        results.append([units, times, speedup, efficiency, overhead])
 
-for approach, filepath in parallel_files.items():
-    parallel_times = read_times_from_csv(filepath)
-    if approach != 'numba':  # `numba` no tiene tiempos de comunicación
-        communication_times = read_times_from_csv(filepath)[1:]
-    else:
-        communication_times = None
-    
-    # Calcular speedup y eficiencia
-    speedup, efficiency = calculate_speedup_and_efficiency(sequential_times, parallel_times, num_cores)
-    if communication_times:
-        overhead = calculate_overhead(communication_times, parallel_times)
+    return results
 
-    # Guardar resultados en CSV
-    write_results_to_csv(f'./results/{approach}_speedup.csv', ["cores"] + [str(size) for size in (512, 1024, 2048, 4096, 8192)], [[core] + s_times for core, s_times in zip(num_cores, speedup)])
-    write_results_to_csv(f'./results/{approach}_efficiency.csv', ["cores"] + [str(size) for size in (512, 1024, 2048, 4096, 8192)], [[core] + e_times for core, e_times in zip(num_cores, efficiency)])
-    if communication_times:
-        write_results_to_csv(f'./results/{approach}_overhead.csv', ["cores"] + [str(size) for size in (512, 1024, 2048, 4096, 8192)], [[core] + o_times for core, o_times in zip(num_cores, overhead)])
+# Cargar los datos de tiempos secuenciales y paralelos
+header, sequential_times_data = load_csv('./results/sequential_times.csv', has_units=False)
+sequential_times = sequential_times_data[0]  # Solo una fila en tiempos secuenciales
+
+# Cargar archivos de tiempos y comunicaciones para cada tipo de enfoque
+approaches = ['cf', 'mp', 'mpi4py', 'numba']
+all_metrics = []
+
+for approach in approaches:
+    time_header, parallel_times = load_csv(f'./results/{approach}_times.csv')
+    comms = None
+
+    if approach not in ['mp', 'numba']:
+        comms_header, comms = load_csv(f'./results/{approach}_comms.csv')
+        comms = {row[0]: row[1:] for row in comms}  # Convertir en dict para acceso fácil
+
+    # Calcular métricas y almacenar con el tipo de enfoque
+    metrics = calculate_metrics([sequential_times], parallel_times, comms)
+    for units, times, speedup, efficiency, overhead in metrics:
+        all_metrics.append(
+            [approach, units] + times + speedup + efficiency + overhead
+        )
+
+# Guardar las métricas en un archivo CSV
+with open('./results/stats_metrics.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    # Encabezado con las métricas
+    header_row = (
+        ["type", "units"] +
+        [f"time_{size}" for size in header] +
+        [f"speedup_{size}" for size in header] +
+        [f"efficiency_{size}" for size in header] +
+        [f"overhead_{size}" for size in header]
+    )
+    writer.writerow(header_row)
+
+    # Escribir los datos de las métricas
+    for row in all_metrics:
+        writer.writerow(row)

@@ -24,7 +24,7 @@ if __name__ == '__main__':
             ../results/mde_matrix_4096x4096.npy
             ../results/mde_matrix_8192x8192.npy
         guarda el tiempo de ejecución en:
-            ../data/secuential.csv agregando una fila con el tiempo para cada matriz, el encabezado es (size,512,1024,2048,4096,8192)
+            ../data/sequential.csv agregando una fila con el tiempo para cada matriz, el encabezado es (size,512,1024,2048,4096,8192)
     '''
     # Definimos los datos
     matrixes = [
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         times.append(end_time - start_time)
     
     # Guardar los tiempos de ejecución en un archivo CSV
-    with open('./results/secuential.csv', 'a') as f:
+    with open('./results/sequential.csv', 'a') as f:
         f.write(','.join(map(str, [512, 1024, 2048, 4096, 8192])) + '\n')
         f.write(','.join(map(str, times)) + '\n')
         

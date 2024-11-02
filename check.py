@@ -13,7 +13,7 @@ def check(A, B):
 sizes = ["512", "1024"]
 types = ["mp", "cf", "numba", "mpi"]
 
-# Load the secuential results
+# Load the sequential results
 matrixes = [
     np.load('./data/mde_matrix_512x512.npy'),
     np.load('./data/mde_matrix_1024x1024.npy'),
