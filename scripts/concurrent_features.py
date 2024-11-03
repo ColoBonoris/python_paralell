@@ -60,7 +60,8 @@ if __name__ == '__main__':
             ../results/cf_mde_matrix_4096x4096.npy
             ../results/cf_mde_matrix_8192x8192.npy
         guarda el tiempo de ejecución en:
-            ../data/concurrent_features.csv, con encabezado (size,512,1024,2048,4096,8192)
+            ../data/cf_times.csv, con encabezado (size,512,1024,2048,4096,8192)
+            ../data/cf_comms.csv, con encabezado (size,512,1024,2048,4096,8192)
     '''
     # Cargar matrices de ejemplo
     matrixes = [
@@ -92,7 +93,8 @@ if __name__ == '__main__':
         comms.append(comm_time)
     
     # Guardar tiempos de ejecución en archivo CSV
-    with open('./results/concurrent_features.csv', 'a') as f:
-        f.write(','.join(map(str, ["matriz",512, 1024, 2048, 4096, 8192])) + '\n')
-        f.write(f"time {workers} units," + ','.join(map(str, times)) + '\n')
-        f.write(f"comms {workers} units," + ','.join(map(str, comms)) + '\n')
+    with open('./results/concurrent_features.csv', 'a') as f, open('./results/concurrent_features_comms.csv', 'a') as f2:
+        f.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
+        f.write(f"{workers}" + ','.join(map(str, times)) + '\n')
+        f2.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
+        f2.write(f"{workers}" + ','.join(map(str, comms)) + '\n')
