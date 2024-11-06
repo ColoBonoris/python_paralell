@@ -106,8 +106,8 @@ if __name__ == '__main__':
             comms.append(comm_time)
     
     if rank == 0:
-        with open('./results/mpi4py.csv', 'a') as f, open('./results/mpi4py_comms.csv', 'a') as f2:
+        with open('./results/mpi4py_times.csv', 'a') as f, open('./results/mpi4py_comms.csv', 'a') as f2:
             f.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
-            f.write(f"{rank}" + ','.join(map(str, times)) + '\n')
+            f.write(f"{comm.Get_size()}," + ','.join(map(str, times)) + '\n')
             f2.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
-            f2.write(f"{rank}" + ','.join(map(str, comms)) + '\n')
+            f2.write(f"{comm.Get_size()}," + ','.join(map(str, comms)) + '\n')

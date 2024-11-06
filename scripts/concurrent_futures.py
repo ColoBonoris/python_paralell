@@ -3,6 +3,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import cpu_count
 import time
 import sys
+import psutil
+import os
 
 def euclidean_distance_chunk(chunk):
     X_chunk, X = chunk
@@ -93,8 +95,8 @@ if __name__ == '__main__':
         comms.append(comm_time)
     
     # Guardar tiempos de ejecución en archivo CSV
-    with open('./results/concurrent_features.csv', 'a') as f, open('./results/concurrent_features_comms.csv', 'a') as f2:
+    with open('./results/cf_times.csv', 'a') as f, open('./results/cf_comms.csv', 'a') as f2:
         f.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
-        f.write(f"{workers}" + ','.join(map(str, times)) + '\n')
+        f.write(f"{workers}," + ','.join(map(str, times)) + '\n')
         f2.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
-        f2.write(f"{workers}" + ','.join(map(str, comms)) + '\n')
+        f2.write(f"{workers}," + ','.join(map(str, comms)) + '\n')

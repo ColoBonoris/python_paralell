@@ -31,7 +31,7 @@ def calculate_metrics(sequential_times, parallel_times, comms=None):
         # Calcular eficiencia
         efficiency = [speedup[i] / units for i in range(n_sizes)]
 
-        # Calcular overhead (incluyendo el multiplicador de 100)
+        # Calcular overhead
         if comms:
             overhead = [(comms[row[0]][i] / times[i]) * 100 for i in range(n_sizes)]
         else:
@@ -64,19 +64,26 @@ for approach in approaches:
             [approach, units] + times + speedup + efficiency + overhead
         )
 
-# Guardar las métricas en un archivo CSV
-with open('./results/stats_metrics.csv', mode='w', newline='') as file:
-    writer = csv.writer(file)
-    # Encabezado con las métricas
-    header_row = (
-        ["type", "units"] +
-        [f"time_{size}" for size in header] +
-        [f"speedup_{size}" for size in header] +
-        [f"efficiency_{size}" for size in header] +
-        [f"overhead_{size}" for size in header]
-    )
-    writer.writerow(header_row)
+# Guardar las métricas en archivos CSV separados
+header_row = ["type", "units"] + [f"{size}" for size in time_header]
 
-    # Escribir los datos de las métricas
+# Save efficiency metrics
+with open('./results/efficiency_metrics.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(header_row)
     for row in all_metrics:
-        writer.writerow(row)
+        writer.writerow(row[:2] + row[2 + len(time_header) * 2:2 + len(time_header) * 3])
+
+# Save speedup metrics
+with open('./results/speedup_metrics.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(header_row)
+    for row in all_metrics:
+        writer.writerow(row[:2] + row[2 + len(time_header):2 + len(time_header) * 2])
+
+# Save overhead metrics
+with open('./results/overhead_metrics.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(header_row)
+    for row in all_metrics:
+        writer.writerow(row[:2] + row[2 + len(time_header) * 3:2 + len(time_header) * 4])

@@ -64,7 +64,7 @@ if __name__ == '__main__':
         # Guardar el tiempo de ejecución
         times.append(end_time - start_time)
     # Guardar los tiempos de ejecución en un archivo CSV
-    with open('./results/multi_processing.csv', 'a') as f:
+    with open('./results/mp_times.csv', 'a') as f:
         f.write(','.join(map(str, ["units",512, 1024, 2048, 4096, 8192])) + '\n')
-        f.write(f"{workers}" + ','.join(map(str, times)) + '\n')
+        f.write(f"{workers}," + ','.join(map(str, times)) + '\n')
     
